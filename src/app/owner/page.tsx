@@ -31,12 +31,12 @@ export default function OwnerDashboard() {
 
       const { data: appUser, error: appErr } = await supabase
         .from("app_users")
-        .select("user_type")
+        .select("role")
         .eq("user_id", userData.user.id)
         .maybeSingle();
 
       if (appErr) return setErr(appErr.message);
-      if (appUser?.user_type !== "platform_owner") return setErr("Not authorized.");
+      if (appUser?.role !== "platform_owner") return setErr("Not authorized.");
 
       const { data, error } = await supabase
         .from("owner_account_directory")
