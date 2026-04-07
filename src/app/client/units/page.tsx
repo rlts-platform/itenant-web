@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -30,7 +31,7 @@ const STATUS_DOT: Record<string, string> = {
   occupied: "bg-green-500", vacant: "bg-neutral-300", maintenance: "bg-orange-400",
 };
 
-export default function UnitsPage() {
+function UnitsPageInner() {
   const params = useSearchParams();
   const filterProperty = params.get("property");
   const [units, setUnits] = useState<Unit[]>([]);
@@ -189,5 +190,13 @@ export default function UnitsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function UnitsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full"/></div>}>
+      <UnitsPageInner />
+    </Suspense>
   );
 }

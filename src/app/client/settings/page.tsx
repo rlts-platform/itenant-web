@@ -1,6 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -45,7 +46,7 @@ const INTEGRATIONS: Integration[] = [
 
 const CATEGORIES = [...new Set(INTEGRATIONS.map(i => i.category))];
 
-export default function SettingsPage() {
+function SettingsPageInner() {
   const params = useSearchParams();
   const [tab, setTab] = useState<Tab>((params.get("tab") as Tab) || "account");
   const [account, setAccount] = useState<{ company_name: string; state: string; plan_tier: string } | null>(null);
@@ -296,5 +297,13 @@ export default function SettingsPage() {
 
       {toast && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-lg z-50">{toast}</div>}
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full"/></div>}>
+      <SettingsPageInner />
+    </Suspense>
   );
 }

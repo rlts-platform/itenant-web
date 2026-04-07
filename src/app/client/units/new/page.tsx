@@ -1,6 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
@@ -9,7 +10,7 @@ const ic = "w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-
 const AMENITIES_LIST = ["Air Conditioning","Dishwasher","In-unit Laundry","Balcony","Hardwood Floors","Garage Parking","Storage","Pool Access","Gym Access","Pet Door"];
 const UTILITIES_LIST = ["Water","Gas","Electric","Internet","Trash","Sewer"];
 
-export default function NewUnitPage() {
+function NewUnitPageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const prefillProperty = params.get("property") || "";
@@ -138,5 +139,13 @@ export default function NewUnitPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewUnitPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full"/></div>}>
+      <NewUnitPageInner />
+    </Suspense>
   );
 }

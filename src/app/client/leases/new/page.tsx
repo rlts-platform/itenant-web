@@ -1,6 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useEffect, useRef, useState } from "react";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
@@ -10,7 +11,7 @@ const F = ({label,required,hint,children}:{label:string;required?:boolean;hint?:
   <div><label className="block text-xs font-semibold text-neutral-600 mb-1.5">{label}{required&&<span className="text-red-500 ml-0.5">*</span>}</label>{children}{hint&&<p className="text-xs text-neutral-400 mt-1">{hint}</p>}</div>
 );
 
-export default function NewLeasePage() {
+function NewLeasePageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const prefillTenant = params.get("tenant");
@@ -208,5 +209,13 @@ export default function NewLeasePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewLeasePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full"/></div>}>
+      <NewLeasePageInner />
+    </Suspense>
   );
 }

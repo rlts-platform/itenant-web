@@ -1,6 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useEffect, useRef, useState } from "react";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
@@ -9,7 +10,7 @@ const ic = "w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-
 
 type Tenant = { tenant_id: string; first_name: string; last_name: string; unit_label: string; property_name: string; rent_amount: number | null; };
 
-export default function LogPaymentPage() {
+function LogPaymentPageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const prefillTenant = params.get("tenant") || "";
@@ -282,5 +283,13 @@ export default function LogPaymentPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LogPaymentPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full"/></div>}>
+      <LogPaymentPageInner />
+    </Suspense>
   );
 }

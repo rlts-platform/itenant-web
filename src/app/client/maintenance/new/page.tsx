@@ -1,6 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useEffect, useRef, useState } from "react";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
@@ -12,7 +13,7 @@ type Property = { property_id: string; nickname: string | null; address: string 
 type Unit = { unit_id: string; unit_number: string | null };
 type Tenant = { tenant_id: string; first_name: string; last_name: string };
 
-export default function NewWorkOrderPage() {
+function NewWorkOrderPageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const [accountId, setAccountId] = useState("");
@@ -238,5 +239,13 @@ export default function NewWorkOrderPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewWorkOrderPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full"/></div>}>
+      <NewWorkOrderPageInner />
+    </Suspense>
   );
 }

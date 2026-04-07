@@ -1,6 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { useEffect, useRef, useState } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -8,7 +9,7 @@ type Doc = { id:string; file_name:string; category:string; subcategory:string|nu
 const CATEGORIES = ["lease","lease_renewal","notice","receipt","maintenance","inspection","legal","correspondence","other"];
 const CAT_ICON:Record<string,string> = { lease:"📄", lease_renewal:"🔄", notice:"📢", receipt:"🧾", maintenance:"🔧", inspection:"🔍", legal:"⚖️", correspondence:"✉️", other:"📁" };
 
-export default function DocumentsPage() {
+function DocumentsPageInner() {
   const params = useSearchParams();
   const filterProperty = params.get("property");
   const [docs, setDocs] = useState<Doc[]>([]);
@@ -167,5 +168,13 @@ export default function DocumentsPage() {
       )}
       {toast && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-lg z-50">{toast}</div>}
     </div>
+  );
+}
+
+export default function DocumentsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full"/></div>}>
+      <DocumentsPageInner />
+    </Suspense>
   );
 }

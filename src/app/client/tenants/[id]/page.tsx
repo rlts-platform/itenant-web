@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Suspense } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -71,7 +72,7 @@ const WO_STATUS: Record<string, string> = {
 
 type Tab = "profile" | "lease" | "payments" | "workorders";
 
-export default function TenantProfilePage() {
+function TenantProfilePageInner() {
   const { id } = useParams<{ id: string }>();
   const params = useSearchParams();
   const justInvited = params.get("invited") === "true";
@@ -412,5 +413,13 @@ export default function TenantProfilePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function TenantProfilePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full"/></div>}>
+      <TenantProfilePageInner />
+    </Suspense>
   );
 }

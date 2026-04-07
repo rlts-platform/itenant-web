@@ -14,7 +14,7 @@ export default function FinancialsPage() {
   const [err, setErr] = useState("");
   const [selectedProperty, setSelectedProperty] = useState<"all"|string>("all");
   const [year, setYear] = useState(new Date().getFullYear());
-  const [tab, setTab] = useState<"trends"|"categories"|"invoices"|"recurring"|"all_records"|"banking">("trends");
+  const [tab, setTab] = useState<"trends"|"forecast"|"categories"|"invoices"|"recurring"|"payments"|"all_records"|"banking"|"budgets"|"taxes"|"reports">("trends");
   const [showAddTx, setShowAddTx] = useState(false);
   const [txForm, setTxForm] = useState({type:"income",category:"rent",amount:"",description:"",date:new Date().toISOString().split("T")[0],property_id:""});
   const setTx = (k:string,v:string) => setTxForm(p=>({...p,[k]:v}));
@@ -97,11 +97,16 @@ export default function FinancialsPage() {
       <div className="flex gap-1 flex-wrap bg-white border border-neutral-200 rounded-2xl p-1.5 shadow-sm mb-6 overflow-x-auto">
         {([
           {key:"trends",label:"Trends"},
+          {key:"forecast",label:"AI Forecast"},
           {key:"categories",label:"Categories"},
+          {key:"reports",label:"Reports"},
           {key:"invoices",label:"Invoices"},
+          {key:"budgets",label:"Budgets"},
           {key:"recurring",label:"Recurring"},
-          {key:"all_records",label:"All Records"},
+          {key:"payments",label:"Payments"},
           {key:"banking",label:"Banking"},
+          {key:"taxes",label:"Taxes"},
+          {key:"all_records",label:"All Records"},
         ] as const).map(t=>(
           <button key={t.key} onClick={()=>setTab(t.key)}
             className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${tab===t.key?"bg-purple-600 text-white":"text-neutral-600 hover:bg-neutral-100"}`}>
@@ -450,6 +455,246 @@ export default function FinancialsPage() {
           </div>
         </div>
       )}
+
+      {/* ── AI FORECAST TAB ── */}
+      {tab === "forecast" && (
+        <div className="space-y-5">
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-bold text-neutral-800 text-lg">AI Revenue Forecast</h3>
+                <p className="text-sm text-neutral-500 mt-0.5">Projected based on your active leases and historical patterns</p>
+              </div>
+              <select className="rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm outline-none">
+                <option>Next 3 Months</option>
+                <option>Next 6 Months</option>
+                <option>Next 12 Months</option>
+              </select>
+            </div>
+            {/* Forecast chart placeholder */}
+            <div className="h-48 bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border border-purple-100 flex items-center justify-center mb-6">
+              <div className="text-center">
+                <div className="text-3xl mb-2">📈</div>
+                <div className="text-sm font-semibold text-neutral-600">Forecast chart renders when you have active leases</div>
+                <div className="text-xs text-neutral-400 mt-1">Add leases to see projected revenue</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { label: "Projected Revenue", value: `$${(income * 3).toLocaleString()}`, color: "#059669", note: "Next 3 months" },
+                { label: "Projected Expenses", value: `$${(expenses * 3).toLocaleString()}`, color: "#DC2626", note: "Based on history" },
+                { label: "Projected Net", value: `$${((income - expenses) * 3).toLocaleString()}`, color: "#7C6FCD", note: "After expenses" },
+              ].map(c => (
+                <div key={c.label} className="bg-neutral-50 rounded-xl p-4 border border-neutral-100">
+                  <div className="text-xs text-neutral-500 mb-1">{c.label}</div>
+                  <div className="text-xl font-bold" style={{color: c.color}}>{c.value}</div>
+                  <div className="text-xs text-neutral-400 mt-1">{c.note}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-purple-50 rounded-2xl border border-purple-200 p-5">
+            <div className="font-semibold text-purple-800 mb-2">What-If Scenarios</div>
+            <div className="text-sm text-purple-700 mb-4">Adjust variables to see how they affect your projected income</div>
+            <div className="grid gap-3">
+              {[
+                { label: "Vacancy Rate Increase", suffix: "%", placeholder: "e.g. 10" },
+                { label: "Rent Increase", suffix: "%", placeholder: "e.g. 5" },
+              ].map(s => (
+                <div key={s.label} className="flex items-center gap-3">
+                  <label className="text-sm text-purple-800 font-medium w-48">{s.label}</label>
+                  <div className="flex items-center gap-2">
+                    <input type="number" placeholder={s.placeholder} className="w-24 px-3 py-2 border border-purple-200 rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-purple-300" />
+                    <span className="text-sm text-purple-600">{s.suffix}</span>
+                  </div>
+                </div>
+              ))}
+              <button className="bg-purple-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-purple-700 w-fit">Run Scenario</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── BUDGETS TAB ── */}
+      {tab === "budgets" && (
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-neutral-500">Track your planned vs actual income and expenses</div>
+            <button className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-700">
+              + Create Budget
+            </button>
+          </div>
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-neutral-100 bg-neutral-50">
+              <div className="font-bold text-neutral-700 text-sm">Annual Budget Overview — {year}</div>
+            </div>
+            {[
+              { label: "Rent Income", budgeted: 0, actual: income, color: "#059669" },
+              { label: "Repairs & Maintenance", budgeted: 0, actual: expenses, color: "#DC2626" },
+              { label: "Property Insurance", budgeted: 0, actual: 0, color: "#2563EB" },
+              { label: "Property Taxes", budgeted: 0, actual: 0, color: "#D97706" },
+              { label: "Utilities", budgeted: 0, actual: 0, color: "#7C3AED" },
+            ].map((b, i) => {
+              const pct = b.budgeted > 0 ? Math.min(100, (b.actual / b.budgeted) * 100) : 0;
+              return (
+                <div key={b.label} className={`px-6 py-4 ${i > 0 ? "border-t border-neutral-50" : ""}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-neutral-700">{b.label}</span>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="text-neutral-400">Budget: <span className="text-neutral-600 font-semibold">${b.budgeted.toLocaleString()}</span></span>
+                      <span className="text-neutral-400">Actual: <span style={{color: b.color}} className="font-semibold">${b.actual.toLocaleString()}</span></span>
+                    </div>
+                  </div>
+                  <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: b.color }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-center">
+            <div className="text-2xl mb-2">💡</div>
+            <div className="text-sm font-semibold text-amber-800 mb-1">Set your budgets</div>
+            <div className="text-sm text-amber-700">Click "Create Budget" to set planned amounts for each category. Track actual vs budget in real time.</div>
+          </div>
+        </div>
+      )}
+
+      {/* ── REPORTS TAB ── */}
+      {tab === "reports" && (
+        <div className="space-y-5">
+          {[
+            { title: "Profit & Loss Statement", desc: "Income vs expenses — the full financial picture", icon: "📊" },
+            { title: "Cash Flow Statement", desc: "Track cash in and out by month", icon: "💵" },
+            { title: "Income by Property", desc: "Compare revenue across your portfolio", icon: "🏘️" },
+          ].map(r => (
+            <div key={r.title} className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="text-3xl">{r.icon}</div>
+                  <div>
+                    <div className="font-bold text-neutral-800">{r.title}</div>
+                    <div className="text-sm text-neutral-500 mt-0.5">{r.desc}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <select className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none">
+                    <option>This Year</option>
+                    <option>This Quarter</option>
+                    <option>This Month</option>
+                    <option>Last Month</option>
+                  </select>
+                  <button onClick={() => {
+                    const rows = ["Financial Report - " + r.title, "Generated: " + new Date().toLocaleDateString(), "", "Date,Description,Type,Amount"];
+                    filtered.forEach(t => rows.push(`${t.date},${t.description || t.category},${t.type},${t.amount}`));
+                    const blob = new Blob([rows.join("
+")], {type: "text/csv"});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a"); a.href = url; a.download = r.title.replace(/ /g,"_") + ".csv"; a.click();
+                  }} className="flex items-center gap-1.5 text-sm font-semibold text-purple-600 border border-purple-200 px-4 py-2 rounded-xl hover:bg-purple-50">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Download CSV
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── PAYMENTS TAB ── */}
+      {tab === "payments" && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-neutral-100 flex items-center justify-between">
+              <div className="font-bold text-neutral-800">Payment Records</div>
+              <a href="/client/payments" className="text-sm font-semibold text-purple-600 hover:text-purple-700">View Full Payment Dashboard →</a>
+            </div>
+            <div className="grid grid-cols-3 divide-x divide-neutral-100">
+              {[
+                { label: "Total Collected", value: `$${income.toLocaleString()}`, color: "#059669" },
+                { label: "Outstanding", value: "$0", color: "#DC2626" },
+                { label: "This Month", value: `$${months[months.length-1]?.income.toLocaleString() || "0"}`, color: "#7C6FCD" },
+              ].map(s => (
+                <div key={s.label} className="px-5 py-4 text-center">
+                  <div className="text-xs text-neutral-500 mb-1">{s.label}</div>
+                  <div className="text-xl font-bold" style={{color: s.color}}>{s.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-neutral-50 rounded-2xl border border-neutral-200 p-6 text-center">
+            <div className="text-sm text-neutral-500 mb-3">Full payment management is in the Payments Dashboard</div>
+            <a href="/client/payments" className="inline-flex items-center gap-2 bg-purple-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-700 no-underline">
+              Go to Payments Dashboard →
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAXES TAB ── */}
+      {tab === "taxes" && (
+        <div className="space-y-5">
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+            <h3 className="font-bold text-neutral-800 mb-4">Tax Summary — {year}</h3>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              {[
+                { label: "Total Rental Income", value: `$${income.toLocaleString()}`, color: "#059669" },
+                { label: "Total Deductible Expenses", value: `$${expenses.toLocaleString()}`, color: "#DC2626" },
+                { label: "Estimated Taxable Income", value: `$${Math.max(0, income - expenses).toLocaleString()}`, color: "#7C6FCD" },
+              ].map(c => (
+                <div key={c.label} className="bg-neutral-50 rounded-xl p-4 border border-neutral-100">
+                  <div className="text-xs text-neutral-500 mb-1">{c.label}</div>
+                  <div className="text-xl font-bold" style={{color: c.color}}>{c.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+            <h3 className="font-bold text-neutral-800 mb-4">Quarterly Tax Estimates</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: "Q1 (Due Apr 15)", amount: Math.max(0, (income - expenses) * 0.0625) },
+                { label: "Q2 (Due Jun 15)", amount: Math.max(0, (income - expenses) * 0.0625) },
+                { label: "Q3 (Due Sep 15)", amount: Math.max(0, (income - expenses) * 0.0625) },
+                { label: "Q4 (Due Jan 15)", amount: Math.max(0, (income - expenses) * 0.0625) },
+              ].map(q => (
+                <div key={q.label} className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl border border-neutral-100">
+                  <span className="text-sm font-medium text-neutral-700">{q.label}</span>
+                  <span className="font-bold text-amber-600">${q.amount.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 text-xs text-neutral-400 italic">⚠️ Estimated at 25% blended rate. Consult a qualified CPA for accurate tax advice specific to your situation.</div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-neutral-800">1099 Generator</h3>
+              <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full font-semibold">Due Jan 31</span>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+              <div className="text-sm text-amber-800 font-medium">Vendors/contractors paid $600+ require a 1099-NEC form</div>
+              <div className="text-xs text-amber-700 mt-1">IRS penalties: $60–$310 per form for late filing</div>
+            </div>
+            <div className="text-center py-6 text-sm text-neutral-400">
+              No vendors on file yet. Add vendors in the Vendors section to track 1099 requirements.
+            </div>
+            <button onClick={() => {
+              const rows = ["1099-NEC Report — " + year, "Vendor,EIN,Total Paid,1099 Required"];
+              const blob = new Blob([rows.join("
+")], {type: "text/csv"});
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a"); a.href = url; a.download = `1099_report_${year}.csv`; a.click();
+            }} className="flex items-center gap-2 border border-neutral-200 bg-white text-neutral-700 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-neutral-50">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export 1099 Report
+            </button>
+          </div>
+        </div>
+      )}
+
       {showAddTx && (
         <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 px-4 pb-4 sm:pb-0">
           <div className="bg-white rounded-2xl border border-neutral-200 w-full max-w-md shadow-xl">
