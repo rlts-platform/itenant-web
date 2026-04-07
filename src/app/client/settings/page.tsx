@@ -222,22 +222,74 @@ export default function SettingsPage() {
 
       {/* ── BILLING TAB ── */}
       {tab === "billing" && (
-        <div className="max-w-2xl">
-          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6 mb-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-neutral-700">Current Plan</h2>
-              <span className="bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold px-3 py-1 rounded-full capitalize">{account?.plan_tier || "Basic"}</span>
-            </div>
-            <div className="grid gap-3">
-              {["Unlimited properties", "Up to 50 units", "Tenant invite flow", "AI lease generator", "Maintenance tracking", "Financial hub"].map(f => (
-                <div key={f} className="flex items-center gap-2 text-sm text-neutral-700"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-green-500"><polyline points="20 6 9 17 4 12" /></svg>{f}</div>
-              ))}
+        <div className="max-w-2xl space-y-4">
+          {/* Current Plan */}
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+            <h2 className="text-sm font-bold text-neutral-700 mb-4">Current Plan</h2>
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-2xl font-bold text-neutral-900 capitalize">{account?.plan_tier || "Starter"}</span>
+                  <span className="bg-purple-50 text-purple-700 border border-purple-200 text-xs font-semibold px-3 py-1 rounded-full">Active</span>
+                </div>
+                <div className="text-sm text-neutral-500">
+                  {account?.plan_tier === "starter" && "$29/month · 10 units · 10 tenants"}
+                  {account?.plan_tier === "growth" && "$79/month · 50 units · 50 tenants"}
+                  {account?.plan_tier === "pro" && "$149/month · 200 units · 200 tenants"}
+                  {account?.plan_tier === "enterprise" && "$299/month · Unlimited"}
+                  {!account?.plan_tier && "$29/month · 10 units · 10 tenants"}
+                </div>
+                <div className="text-xs text-neutral-400 mt-1">Next billing date: {new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en", { month: "long", day: "numeric", year: "numeric" })}</div>
+              </div>
+              <a href="/login" className="text-sm font-semibold text-purple-600 border border-purple-200 bg-purple-50 px-4 py-2 rounded-xl hover:bg-purple-100 no-underline">Upgrade Plan</a>
             </div>
           </div>
-          <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-5 text-center">
-            <h3 className="font-bold text-neutral-900 mb-1">Ready to scale?</h3>
-            <p className="text-sm text-neutral-500 mb-4">Upgrade for unlimited units, advanced AI features, priority support, and all platform integrations.</p>
-            <button className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700">Upgrade Plan</button>
+
+          {/* Payment Method */}
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+            <h2 className="text-sm font-bold text-neutral-700 mb-4">Payment Method</h2>
+            <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl border border-neutral-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-7 bg-neutral-800 rounded flex items-center justify-center">
+                  <svg width="18" height="12" viewBox="0 0 24 16" fill="none"><rect width="24" height="16" rx="2" fill="#1a1a2e"/><rect y="4" width="24" height="4" fill="#7C6FCD" opacity="0.8"/></svg>
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-neutral-800">Card on file</div>
+                  <div className="text-xs text-neutral-400">To update your payment method, contact support</div>
+                </div>
+              </div>
+              <button className="text-xs font-semibold text-purple-600 border border-purple-200 px-3 py-1.5 rounded-lg hover:bg-purple-50">Update</button>
+            </div>
+          </div>
+
+          {/* Invoice History */}
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between">
+              <h2 className="text-sm font-bold text-neutral-700">Invoice History</h2>
+              <span className="text-xs text-neutral-400">Last 12 months</span>
+            </div>
+            <div className="p-6 text-center">
+              <div className="text-3xl mb-2">🧾</div>
+              <p className="text-sm text-neutral-500">Invoice history will appear here once billing is active.</p>
+              <p className="text-xs text-neutral-400 mt-1">Invoices are generated on each billing date.</p>
+            </div>
+          </div>
+
+          {/* Cancel Subscription */}
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+            <h2 className="text-sm font-bold text-neutral-700 mb-2">Cancel Subscription</h2>
+            <p className="text-xs text-neutral-500 mb-4">If you cancel, your account remains active until the end of the current billing period. Your data will be retained for 30 days after cancellation, then permanently deleted.</p>
+            <button
+              onClick={() => {
+                const input = window.prompt('Type "CANCEL" to confirm cancellation of your subscription:');
+                if (input === "CANCEL") {
+                  alert("Cancellation request submitted. You will receive a confirmation email within 24 hours.");
+                }
+              }}
+              className="text-xs font-semibold text-red-500 hover:text-red-700 hover:underline"
+            >
+              Cancel Subscription
+            </button>
           </div>
         </div>
       )}

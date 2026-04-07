@@ -27,19 +27,29 @@ export default function PaymentsPage() {
 
   useEffect(()=>{
     (async()=>{
-      const {data:ud} = await supabase.auth.getUser();
-      if(!ud.user){location.href="/login";return;}
-      const {data:au} = await supabase.from("app_users").select("account_id").eq("user_id",ud.user.id).maybeSingle();
-      if(!au){setErr("Not authorized.");setLoading(false);return;}
-      const {data:raw} = await supabase.from("payment_records").select("*").eq("account_id",au.account_id).order("created_at",{ascending:false});
-      const enriched:Payment[] = await Promise.all((raw||[]).map(async p=>{
-        const {data:t} = await supabase.from("tenants").select("first_name,last_name,unit_id").eq("tenant_id",p.tenant_id).maybeSingle();
-        const {data:u} = t?.unit_id ? await supabase.from("units").select("unit_number,property_id").eq("unit_id",t.unit_id).maybeSingle() : {data:null};
-        const {data:prop} = u ? await supabase.from("properties").select("nickname,address").eq("property_id",u.property_id).maybeSingle() : {data:null};
-        return {...p, tenant_name:t?`${t.first_name} ${t.last_name}`:"Unknown", unit_label:u?.unit_number?`Unit ${u.unit_number}`:"", property_name:prop?.nickname||prop?.address||""};
-      }));
-      setPayments(enriched);
-      setLoading(false);
+      try {
+        const {data:ud} = await supabase.auth.getUser();
+        if(!ud.user){location.href="/login";return;}
+        const {data:au} = await supabase.from("app_users").select("account_id").eq("user_id",ud.user.id).maybeSingle();
+        if(!au){setErr("Account not found. Please contact support.");setLoading(false);return;}
+        const {data:raw, error:rawErr} = await supabase.from("payment_records").select("*").eq("account_id",au.account_id).order("created_at",{ascending:false});
+        if(rawErr){setErr("Failed to load payments. Please refresh.");setLoading(false);return;}
+        const enriched:Payment[] = await Promise.all((raw||[]).map(async p=>{
+          try {
+            const {data:t} = await supabase.from("tenants").select("first_name,last_name,unit_id").eq("tenant_id",p.tenant_id).maybeSingle();
+            const {data:u} = t?.unit_id ? await supabase.from("units").select("unit_number,property_id").eq("unit_id",t.unit_id).maybeSingle() : {data:null};
+            const {data:prop} = u ? await supabase.from("properties").select("nickname,address").eq("property_id",u.property_id).maybeSingle() : {data:null};
+            return {...p, tenant_name:t?`${t.first_name} ${t.last_name}`:"Unknown", unit_label:u?.unit_number?`Unit ${u.unit_number}`:"", property_name:prop?.nickname||prop?.address||""};
+          } catch {
+            return {...p, tenant_name:"Unknown", unit_label:"", property_name:""};
+          }
+        }));
+        setPayments(enriched);
+        setLoading(false);
+      } catch(e) {
+        setErr("Something went wrong loading payments. Please refresh the page.");
+        setLoading(false);
+      }
     })();
   },[]);
 
@@ -54,7 +64,22 @@ export default function PaymentsPage() {
   const totalOutstanding = payments.filter(p=>["pending","late"].includes(p.status)).reduce((s,p)=>s+Number(p.amount),0);
   const recentActivity = payments.filter(p=>new Date(p.created_at)>new Date(Date.now()-30*24*60*60*1000)).length;
 
-  if(loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full"/></div>;
+  if(loading) return (
+    <div className="flex flex-col items-center justify-center h-64 gap-4">
+      <div className="animate-spin w-10 h-10 border-2 border-purple-500 border-t-transparent rounded-full"/>
+      <div className="text-sm text-neutral-500">Loading payments...</div>
+    </div>
+  );
+
+  if(err && payments.length === 0) return (
+    <div className="flex flex-col items-center justify-center h-64 gap-4">
+      <div className="text-4xl">⚠️</div>
+      <div className="text-sm text-red-600 font-medium text-center max-w-sm">{err}</div>
+      <button onClick={() => location.reload()} className="text-sm font-semibold text-purple-600 border border-purple-200 px-4 py-2 rounded-xl hover:bg-purple-50">
+        Refresh Page
+      </button>
+    </div>
+  );
 
   return (
     <div>

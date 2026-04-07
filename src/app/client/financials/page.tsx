@@ -14,6 +14,7 @@ export default function FinancialsPage() {
   const [err, setErr] = useState("");
   const [selectedProperty, setSelectedProperty] = useState<"all"|string>("all");
   const [year, setYear] = useState(new Date().getFullYear());
+  const [tab, setTab] = useState<"trends"|"categories"|"invoices"|"recurring"|"all_records"|"banking">("trends");
   const [showAddTx, setShowAddTx] = useState(false);
   const [txForm, setTxForm] = useState({type:"income",category:"rent",amount:"",description:"",date:new Date().toISOString().split("T")[0],property_id:""});
   const setTx = (k:string,v:string) => setTxForm(p=>({...p,[k]:v}));
@@ -92,6 +93,25 @@ export default function FinancialsPage() {
       </div>
       {err && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{err}</div>}
 
+      {/* TAB BAR */}
+      <div className="flex gap-1 flex-wrap bg-white border border-neutral-200 rounded-2xl p-1.5 shadow-sm mb-6 overflow-x-auto">
+        {([
+          {key:"trends",label:"Trends"},
+          {key:"categories",label:"Categories"},
+          {key:"invoices",label:"Invoices"},
+          {key:"recurring",label:"Recurring"},
+          {key:"all_records",label:"All Records"},
+          {key:"banking",label:"Banking"},
+        ] as const).map(t=>(
+          <button key={t.key} onClick={()=>setTab(t.key)}
+            className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all whitespace-nowrap ${tab===t.key?"bg-purple-600 text-white":"text-neutral-600 hover:bg-neutral-100"}`}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── TRENDS TAB ── */}
+      {tab === "trends" && (<div>
       {/* Filters */}
       <div className="flex gap-3 mb-6">
         <select className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20" value={selectedProperty} onChange={e=>setSelectedProperty(e.target.value)}>
@@ -207,7 +227,229 @@ export default function FinancialsPage() {
         )}
       </div>
 
-      {/* Add transaction modal */}
+      </div>)} {/* END TRENDS TAB */}
+
+      {/* ── CATEGORIES TAB ── */}
+      {tab === "categories" && (
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Income Categories */}
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-neutral-100 bg-green-50">
+              <div className="font-bold text-green-800">Income Categories</div>
+            </div>
+            <div className="divide-y divide-neutral-50">
+              {[
+                {name:"Rent Income",color:"#059669",emoji:"🏠"},
+                {name:"Late Fees",color:"#D97706",emoji:"⏰"},
+                {name:"Pet Rent",color:"#7C3AED",emoji:"🐾"},
+                {name:"Parking",color:"#6B7280",emoji:"🚗"},
+                {name:"Security Deposit",color:"#2563EB",emoji:"🔒"},
+                {name:"Application Fees",color:"#EA580C",emoji:"📋"},
+                {name:"Other Income",color:"#9CA3AF",emoji:"💰"},
+              ].map(c=>{
+                const catKey = c.name.toLowerCase().replace(/ /g,"_");
+                const total = filtered.filter(t=>t.type==="income"&&t.category.toLowerCase().replace(/ /g,"_")===catKey).reduce((s,t)=>s+Number(t.amount),0);
+                return (
+                  <div key={c.name} className="flex items-center justify-between px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{c.emoji}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{background:c.color}}/>
+                        <span className="text-sm font-medium text-neutral-700">{c.name}</span>
+                      </div>
+                    </div>
+                    <span className="text-sm font-bold text-green-600">${total.toLocaleString()}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {/* Expense Categories */}
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-neutral-100 bg-red-50">
+              <div className="font-bold text-red-800">Expense Categories</div>
+            </div>
+            <div className="divide-y divide-neutral-50">
+              {[
+                {name:"Repairs & Maintenance",color:"#DC2626",emoji:"🔧"},
+                {name:"Property Insurance",color:"#2563EB",emoji:"🛡️"},
+                {name:"Property Taxes",color:"#374151",emoji:"🏛️"},
+                {name:"Management Fees",color:"#7C3AED",emoji:"💼"},
+                {name:"Utilities",color:"#EA580C",emoji:"⚡"},
+                {name:"Mortgage / Loan",color:"#1D4ED8",emoji:"🏦"},
+                {name:"Landscaping",color:"#059669",emoji:"🌿"},
+                {name:"Cleaning",color:"#0891B2",emoji:"🧹"},
+                {name:"Advertising",color:"#EC4899",emoji:"📣"},
+                {name:"Legal & Professional",color:"#6B7280",emoji:"⚖️"},
+                {name:"Capital Improvements",color:"#B45309",emoji:"🏗️"},
+                {name:"Other Expense",color:"#9CA3AF",emoji:"📦"},
+              ].map(c=>{
+                const catKey = c.name.toLowerCase().replace(/[^a-z]+/g,"_").replace(/_$/,"");
+                const total = filtered.filter(t=>t.type==="expense").reduce((s,t)=>s+Number(t.amount),0);
+                return (
+                  <div key={c.name} className="flex items-center justify-between px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{c.emoji}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{background:c.color}}/>
+                        <span className="text-sm font-medium text-neutral-700">{c.name}</span>
+                      </div>
+                    </div>
+                    <span className="text-sm font-bold text-red-500">$0</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="md:col-span-2 text-xs text-neutral-400 bg-neutral-50 rounded-xl p-3 text-center">
+            Category totals pull from your transaction records. Add transactions using the + Transaction button above.
+          </div>
+        </div>
+      )}
+
+      {/* ── INVOICES TAB ── */}
+      {tab === "invoices" && (
+        <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between">
+            <div className="font-bold text-neutral-800">Invoices</div>
+            <button className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-purple-700">
+              + Create Invoice
+            </button>
+          </div>
+          <div className="p-10 text-center">
+            <div className="text-4xl mb-3">🧾</div>
+            <h3 className="font-bold text-neutral-800 mb-1">No invoices yet</h3>
+            <p className="text-sm text-neutral-500 mb-4">Create invoices for tenants or vendors. They'll receive a copy by email.</p>
+            <button className="bg-purple-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-700">
+              Create First Invoice
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── RECURRING TAB ── */}
+      {tab === "recurring" && (
+        <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between">
+            <div className="font-bold text-neutral-800">Recurring Entries</div>
+            <button className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-purple-700">
+              + Add Recurring
+            </button>
+          </div>
+          <div className="p-10 text-center">
+            <div className="text-4xl mb-3">🔁</div>
+            <h3 className="font-bold text-neutral-800 mb-1">No recurring entries</h3>
+            <p className="text-sm text-neutral-500 mb-4">Set up mortgage payments, insurance premiums, or recurring income to auto-post on schedule.</p>
+            <button className="bg-purple-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-700">
+              Add Recurring Entry
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── ALL RECORDS TAB ── */}
+      {tab === "all_records" && (
+        <div>
+          {/* Controls */}
+          <div className="flex gap-3 mb-4 flex-wrap">
+            <input className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-purple-500/20 min-w-48"
+              placeholder="Search transactions..." />
+            <select className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm outline-none" value={selectedProperty} onChange={e=>setSelectedProperty(e.target.value)}>
+              <option value="all">All Properties</option>
+              {properties.map(p=><option key={p.property_id} value={p.property_id}>{p.nickname||p.address}</option>)}
+            </select>
+            <select className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm outline-none">
+              <option value="all">All Types</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+            <button onClick={()=>{
+              const rows = ["Date,Description,Category,Type,Amount,Property"];
+              filtered.forEach(t=>rows.push(`${t.date},${t.description||""},${t.category},${t.type},${t.amount},${properties.find(p=>p.property_id===t.property_id)?.nickname||""}`));
+              const blob = new Blob([rows.join("\n")],{type:"text/csv"});
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a"); a.href=url; a.download="transactions.csv"; a.click();
+            }} className="flex items-center gap-2 border border-neutral-200 bg-white text-neutral-700 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-neutral-50 ml-auto">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export CSV
+            </button>
+          </div>
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-neutral-50 text-xs text-neutral-500 uppercase tracking-wider">
+                  <th className="px-5 py-3 text-left">Date</th>
+                  <th className="px-5 py-3 text-left">Description</th>
+                  <th className="px-5 py-3 text-left">Category</th>
+                  <th className="px-5 py-3 text-center">Type</th>
+                  <th className="px-5 py-3 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr><td colSpan={5} className="px-5 py-10 text-center text-neutral-400 text-sm">
+                    No transactions yet. Click "+ Transaction" to add your first entry.
+                  </td></tr>
+                ) : filtered.map(t=>(
+                  <tr key={t.id} className="border-t border-neutral-50 hover:bg-neutral-50">
+                    <td className="px-5 py-3 text-neutral-500">{new Date(t.date).toLocaleDateString()}</td>
+                    <td className="px-5 py-3 font-medium text-neutral-900 capitalize">{t.description||t.category}</td>
+                    <td className="px-5 py-3 text-neutral-500 capitalize">{t.category.replace(/_/g," ")}</td>
+                    <td className="px-5 py-3 text-center">
+                      <span className={`text-xs px-2 py-1 rounded-full font-semibold ${t.type==="income"?"bg-green-50 text-green-700":"bg-red-50 text-red-600"}`}>
+                        {t.type}
+                      </span>
+                    </td>
+                    <td className={`px-5 py-3 text-right font-bold ${t.type==="income"?"text-green-600":"text-red-500"}`}>
+                      {t.type==="income"?"+":"-"}${Number(t.amount).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── BANKING TAB ── */}
+      {tab === "banking" && (
+        <div className="space-y-5">
+          {/* Connect Bank */}
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+            <h3 className="font-bold text-neutral-800 mb-1">Connect Bank Account</h3>
+            <p className="text-sm text-neutral-500 mb-4">Link your bank via Plaid to automatically sync transactions and track cash flow in real time.</p>
+            <button className="flex items-center gap-2 bg-purple-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-700">
+              🏦 Connect Bank via Plaid
+            </button>
+          </div>
+          {/* Upload Statements */}
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+            <h3 className="font-bold text-neutral-800 mb-1">Upload Bank Statement</h3>
+            <p className="text-sm text-neutral-500 mb-4">Upload PDF or CSV statements from any bank to import transactions manually.</p>
+            <div className="border-2 border-dashed border-neutral-200 rounded-xl p-8 text-center hover:border-purple-400 cursor-pointer transition-colors">
+              <div className="text-3xl mb-2">📤</div>
+              <div className="text-sm text-neutral-600 font-medium">Drop file here or click to upload</div>
+              <div className="text-xs text-neutral-400 mt-1">PDF, CSV, XLSX supported</div>
+            </div>
+          </div>
+          {/* Export */}
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+            <h3 className="font-bold text-neutral-800 mb-4">Export Financial Data</h3>
+            <div className="flex gap-3 flex-wrap">
+              <button onClick={()=>{
+                const rows = ["Date,Description,Category,Type,Amount"];
+                filtered.forEach(t=>rows.push(`${t.date},${t.description||""},${t.category},${t.type},${t.amount}`));
+                const blob = new Blob([rows.join("\n")],{type:"text/csv"});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a"); a.href=url; a.download="financial_export.csv"; a.click();
+              }} className="flex items-center gap-2 border border-neutral-200 bg-white text-neutral-700 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-neutral-50">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export All Transactions (CSV)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showAddTx && (
         <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 px-4 pb-4 sm:pb-0">
           <div className="bg-white rounded-2xl border border-neutral-200 w-full max-w-md shadow-xl">
