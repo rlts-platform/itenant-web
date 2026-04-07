@@ -15,6 +15,7 @@ const NAV = [
   { href: "/client/financials", label: "Financial Hub", icon: "bar-chart-2" },
   { href: "/client/documents", label: "Documents", icon: "folder" },
   { href: "/client/reports", label: "Reports", icon: "trending-up" },
+  { href: "/client/analytics", label: "Analytics", icon: "bar-chart-2" },
   { href: "/client/vendors", label: "Vendors", icon: "truck" },
   { href: "/client/community", label: "Community", icon: "users-round" },
   { href: "/client/team", label: "Team", icon: "user-check" },
