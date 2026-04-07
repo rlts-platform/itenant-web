@@ -113,7 +113,41 @@ export default function SettingsPage() {
           <div className="mt-4 bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
             <h2 className="text-sm font-bold text-neutral-700 mb-3">Danger Zone</h2>
             <p className="text-xs text-neutral-500 mb-3">Actions here are permanent and cannot be undone.</p>
-            <button className="border border-red-200 text-red-600 px-4 py-2 rounded-xl text-xs font-semibold hover:bg-red-50">Delete Account</button>
+            <div className="flex items-center gap-3 flex-wrap">
+              <button
+                onClick={async () => {
+                  const confirmed = window.confirm(
+                    "We'll prepare a full export of your account data including properties, units, tenants, leases, payments, and team. Click OK to download."
+                  );
+                  if (!confirmed) return;
+                  const { data: ud } = await supabase.auth.getUser();
+                  if (!ud.user) return;
+                  const { data: au } = await supabase.from("app_users").select("account_id").eq("user_id", ud.user.id).maybeSingle();
+                  if (!au) return;
+                  const rows: string[] = ["iTenant Account Export\n"];
+                  const tables = ["properties","units","tenants","leases","payments","documents"];
+                  for (const t of tables) {
+                    const { data } = await supabase.from(t).select("*").eq("account_id", au.account_id);
+                    if (data && data.length > 0) {
+                      rows.push(`\n--- ${t.toUpperCase()} (${data.length} records) ---`);
+                      rows.push(Object.keys(data[0]).join(","));
+                      data.forEach(r => rows.push(Object.values(r).map(v => JSON.stringify(v ?? "")).join(",")));
+                    }
+                  }
+                  const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url; a.download = "iTenant_Export.csv"; a.click();
+                  URL.revokeObjectURL(url);
+                  setToast("Your account data export is downloading ✓");
+                  setTimeout(() => setToast(""), 3000);
+                }}
+                className="border border-purple-300 text-purple-600 px-4 py-2 rounded-xl text-xs font-semibold hover:bg-purple-50"
+              >
+                Export Account Data
+              </button>
+              <button className="border border-red-200 text-red-600 px-4 py-2 rounded-xl text-xs font-semibold hover:bg-red-50">Delete Account</button>
+            </div>
           </div>
         </div>
       )}
